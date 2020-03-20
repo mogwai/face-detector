@@ -1,0 +1,6 @@
+facenet-pytorch
+fastapi
+opencv-python
+python-multipart
+torch
+torchvision
