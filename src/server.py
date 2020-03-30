@@ -22,7 +22,7 @@ with open('./font.ttf','rb') as f:
 
 @app.get('/')
 def hello(res: Response):
-    return Response(status_code=status.HTTP_200_OK)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
     
 @app.post("/detect")
 async def faces_bbox(file: bytes = File(...)):
