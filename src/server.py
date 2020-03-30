@@ -33,14 +33,15 @@ async def faces_bbox(file: bytes = File(...)):
 def _detect_preview(file):
     im = Image.open(BytesIO(file))
     drawer = ImageDraw.Draw(im)
-    for i, c in zip(*detect_faces(im)):
+    faces, confidence = detect_faces(im)
+    for i, c in zip(faces,confidence):
         drawer.rectangle(i, fill=None, outline='blue', width=4)
         pos = i[:2]
         pos[0]+=5
         drawer.text(pos, str(c*100)[:4], (0,0,255), FONT)
     out = BytesIO()
     im.save(out, format='JPEG')
-    return out
+    return out, faces, confidence
 
 @app.post('/detect/preview')
 async def detect_prevew(file: bytes = File(...)):
@@ -49,8 +50,10 @@ async def detect_prevew(file: bytes = File(...)):
 
 @app.post('/detect/preview/base64')
 async def detect_base64_preview(file: bytes = File(...)):
-    out = _detect_preview(file)
+    out,faces, confidence = _detect_preview(file)
     res = {
+        'faces': faces.tolist(),
+        'confidence': confidence.tolist(),
         'image': base64.encodebytes(out.getvalue()),
     }
     return res
