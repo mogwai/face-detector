@@ -13,4 +13,7 @@ net = MTCNN(device=device)
 def detect_faces(im):
     im = to_tensor(im)[:3] # Enforce 3 channels
     im = to_pil_image(im)
-    return net.detect(im)[0]
+    res = net.detect(im)
+    if len(res) < 1:
+        return None
+    return res[0]
