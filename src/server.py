@@ -21,9 +21,9 @@ with open('./font.ttf','rb') as f:
     FONT = ImageFont.truetype(BytesIO(f.read()), 15)
 
 @app.get('/')
-async def meth():
-    return "Hello"
-
+def hello(res: Response):
+    return Response(status_code=status.HTTP_200_OK)
+    
 @app.post("/detect")
 async def faces_bbox(file: bytes = File(...)):
     im = Image.open(BytesIO(file))
