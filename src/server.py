@@ -2,7 +2,7 @@ from io import BytesIO
 
 from fastapi import FastAPI, File, status, Response
 from fastapi.middleware.cors import CORSMiddleware
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import base64
 from .faces import detect_faces
 
@@ -16,6 +16,10 @@ app.add_middleware(
         allow_headers=["*"],
 )
 
+
+with open('./font.ttf','rb') as f:
+    FONT = ImageFont.truetype(BytesIO(f.read()), 15)
+
 @app.get('/')
 async def meth():
     return "Hello"
@@ -28,10 +32,12 @@ async def faces_bbox(file: bytes = File(...)):
 
 def _detect_preview(file):
     im = Image.open(BytesIO(file))
-    faces,  _ = detect_faces(im)
     drawer = ImageDraw.Draw(im)
-    for i in faces:
+    for i, c in zip(*detect_faces(im)):
         drawer.rectangle(i, fill=None, outline='blue', width=4)
+        pos = i[:2]
+        pos[0]+=5
+        drawer.text(pos, str(c*100)[:4], (0,0,255), FONT)
     out = BytesIO()
     im.save(out, format='JPEG')
     return out
@@ -44,7 +50,10 @@ async def detect_prevew(file: bytes = File(...)):
 @app.post('/detect/preview/base64')
 async def detect_base64_preview(file: bytes = File(...)):
     out = _detect_preview(file)
-    return base64.encodebytes(out.getvalue())
+    res = {
+        'image': base64.encodebytes(out.getvalue()),
+    }
+    return res
 
 @app.get('/meta')
 async def meta():
