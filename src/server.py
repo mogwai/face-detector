@@ -45,7 +45,7 @@ def _detect_preview(file):
 
 @app.post('/detect/preview')
 async def detect_prevew(file: bytes = File(...)):
-    out = _detect_preview(file)
+    out,_,__ = _detect_preview(file)
     return Response(content=out.getvalue(), media_type="image/jpeg")
 
 @app.post('/detect/preview/base64')
