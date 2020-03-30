@@ -16,7 +16,6 @@ app.add_middleware(
         allow_headers=["*"],
 )
 
-
 with open('./font.ttf','rb') as f:
     FONT = ImageFont.truetype(BytesIO(f.read()), 15)
 
