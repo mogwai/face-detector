@@ -16,4 +16,4 @@ def detect_faces(im):
     res = net.detect(im)
     if len(res) < 1:
         return None
-    return res[0]
+    return res[0], res[1]

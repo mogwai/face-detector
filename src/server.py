@@ -23,13 +23,13 @@ async def meth():
 @app.post("/detect")
 async def faces_bbox(file: bytes = File(...)):
     im = Image.open(BytesIO(file))
-    faces = detect_faces(im)
-    return {'faces' : faces}
+    faces, conf = detect_faces(im)
+    return {'faces' : faces.tolist(), 'confidence': conf.tolist()}
 
 @app.post('/detect/preview')
 async def detect_prevew(file: bytes = File(...)):
     im = Image.open(BytesIO(file))
-    faces = detect_faces(im)
+    faces,  _ = detect_faces(im)
     drawer = ImageDraw.Draw(im)
     for i in faces:
         drawer.rectangle(i, fill=None, outline='blue', width=4)
