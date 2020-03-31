@@ -1,13 +1,17 @@
+import base64
 from io import BytesIO
+from typing import List
 
-from fastapi import FastAPI, File, status, Response
+from fastapi import FastAPI, File, Response, status, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, ImageDraw, ImageFont
-import base64
+from pydantic import BaseModel
+
 from .faces import detect_faces
 
 app = FastAPI()
 
+# Set up CORS
 app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -16,20 +20,28 @@ app.add_middleware(
         allow_headers=["*"],
 )
 
+# Load font to use to show percentages
 with open('./font.ttf','rb') as f:
     FONT = ImageFont.truetype(BytesIO(f.read()), 15)
 
 @app.get('/')
 def hello(res: Response):
+    """A route for health checking"""
     return Response(status_code=status.HTTP_204_NO_CONTENT)
     
-@app.post("/detect")
-async def faces_bbox(file: bytes = File(...)):
+class BBoxResponse(BaseModel):
+    faces: List[List[int]]
+    confidence: List[float]
+
+@app.post("/detect", response_model=BBoxResponse)
+async def faces_bbox(file: UploadFile = File(...)):
+    """Gets the bounding boxes of faces in a given image"""
+    file = await file.read()
     im = Image.open(BytesIO(file))
     faces, conf = detect_faces(im)
     return {'faces' : faces.tolist(), 'confidence': conf.tolist()}
 
-def _detect_preview(file):
+def _detect_preview(file: bytes):
     im = Image.open(BytesIO(file))
     drawer = ImageDraw.Draw(im)
     faces, confidence = detect_faces(im)
@@ -43,12 +55,19 @@ def _detect_preview(file):
     return out, faces, confidence
 
 @app.post('/detect/preview')
-async def detect_prevew(file: bytes = File(...)):
-    out,_,__ = _detect_preview(file)
+async def detect_prevew(file: UploadFile = File(...)):
+    """Returns a jpeg of the visualised results"""
+    data = await file.read()
+    out,_,__ = _detect_preview(data)
     return Response(content=out.getvalue(), media_type="image/jpeg")
 
-@app.post('/detect/preview/base64')
-async def detect_base64_preview(file: bytes = File(...)):
+class Base64BBoxResponse(BBoxResponse):
+    image: str
+
+@app.post('/detect/preview/base64', response_model=Base64BBoxResponse)
+async def detect_base64_preview(file: UploadFile = File(...)):
+    """Returns the base64 encoded image with the results"""
+    file = await file.read()
     out,faces, confidence = _detect_preview(file)
     res = {
         'faces': faces.tolist(),
@@ -59,4 +78,5 @@ async def detect_base64_preview(file: bytes = File(...)):
 
 @app.get('/meta')
 async def meta():
+    """ Meta information about the models being exposed such as classes"""
     return {}
