@@ -1,0 +1,51 @@
+image: harrycb/awscli
+definitions:
+  services:
+    docker:
+      memory: 2048
+  steps:
+    # Testing step will look for Dockerfile and try to run tests for project
+    - step: &test
+        name: 'Testing'
+        services:
+          - docker
+        script:
+          - curl -s https://bitbucket.org/firedropAI/pipelines-scripts/raw/master/test.sh | bash -s
+
+    # Build if there has been an increase in the .version file that is
+    # greater than previous tags.
+    - step: &build
+        name: 'Container Building, Versioning, Image Pushing'
+        services:
+          - docker
+        script:
+           - curl -s https://bitbucket.org/firedropAI/pipelines-scripts/raw/master/build.sh | bash -s 
+
+    - step: &develop-build
+        name: 'Develop Build'
+        services:
+          - docker
+        script: 
+          - curl -s https://bitbucket.org/firedropAI/pipelines-scripts/raw/master/develop.sh | bash -s 
+
+    - step: &container-build-only
+        name: 'Container Build'
+        services:
+          - docker
+        script:
+          - docker build --build-arg ssh_key="$(cat /opt/atlassian/pipelines/agent/ssh/id_rsa)" .
+pipelines:
+  pull-requests:
+    '**': #this runs as default for any branch not elsewhere defined, but only when pull-request is created
+      - step: *container-build-only
+  custom: # Pipelines that can only be triggered manually
+    ecr-build-push-custom-tags:
+      - variables:
+          - name: ECR_IMAGE_TAGS
+      - step: *container-build-only
+  # Only run the ecr-build-push step on selected branches
+  branches:
+    develop:
+      - step: *develop-build
+    master:
+      - step: *build

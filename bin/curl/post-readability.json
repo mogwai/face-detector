@@ -1,0 +1,8 @@
+{
+	"font":"http://fonts.gstatic.com/s/zillaslab/v5/dFa5ZfeM_74wlPZtksIFYpEY2HSjWlhzbaw.ttf",
+	"color": [255,0,0],
+	"text": "Firedrop",
+	"image":"http://dev.stylus.firedroplabs.com:3000/images/full/bb6ab920-893f-11ea-8313-adb41e47c060.jpeg",
+	"position":[50,50],
+	"fontsize": 20
+}

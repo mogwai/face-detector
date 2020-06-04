@@ -7,11 +7,12 @@ from torchvision.transforms.functional import to_pil_image, to_tensor
 torch.autograd.set_grad_enabled(False)
 
 # Set Device
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 print(device)
 
 # Load model
 net = MTCNN(device=device)
+
 
 def detect_faces(im) -> Tuple[torch.Tensor, torch.Tensor]:
     """Returns bounding boxes and confidence for a given pil Image"""
@@ -21,5 +22,5 @@ def detect_faces(im) -> Tuple[torch.Tensor, torch.Tensor]:
     res = net.detect(im)
     # Check if no results
     if len(res) < 1:
-        return None
+        return [], []
     return res[0], res[1]
