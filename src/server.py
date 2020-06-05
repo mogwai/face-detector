@@ -28,10 +28,10 @@ with open("./font.ttf", "rb") as f:
     FONT = ImageFont.truetype(BytesIO(f.read()), 15)
 
 
-@app.get("/")
-def hello(res: Response):
+@app.get("/version")
+def version(res: Response):
     """A route for health checking"""
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return {"version": VERSION}
 
 
 class BBoxResponse(BaseModel):
