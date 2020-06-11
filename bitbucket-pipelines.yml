@@ -1,9 +1,17 @@
-image: harrycb/awscli
+image: firedrop/awscli
 definitions:
   services:
     docker:
       memory: 2048
   steps:
+    # Lint step to check code correctness
+    - step: &lint
+        name: 'Linting'
+        services:
+          - docker
+        script:
+          - curl -s https://bitbucket.org/firedropAI/pipelines-scripts/raw/master/lint.sh | bash -s
+
     # Testing step will look for Dockerfile and try to run tests for project
     - step: &test
         name: 'Testing'
@@ -20,7 +28,8 @@ definitions:
           - docker
         script:
            - curl -s https://bitbucket.org/firedropAI/pipelines-scripts/raw/master/build.sh | bash -s 
-
+    
+    # Legacy develop builds
     - step: &develop-build
         name: 'Develop Build'
         services:
@@ -33,19 +42,21 @@ definitions:
         services:
           - docker
         script:
-          - docker build --build-arg ssh_key="$(cat /opt/atlassian/pipelines/agent/ssh/id_rsa)" .
+          - curl -s https://bitbucket.org/firedropAI/pipelines-scripts/raw/master/container-build.sh | bash -s
+
+    - step: &manual-push
+        name: 'Manual Push'
+        services:
+          - docker
+        script:
+          - curl -s https://bitbucket.org/firedropAI/pipelines-scripts/raw/master/manual.sh | bash -s
 pipelines:
-  pull-requests:
-    '**': #this runs as default for any branch not elsewhere defined, but only when pull-request is created
-      - step: *container-build-only
-  custom: # Pipelines that can only be triggered manually
-    ecr-build-push-custom-tags:
-      - variables:
-          - name: ECR_IMAGE_TAGS
-      - step: *container-build-only
-  # Only run the ecr-build-push step on selected branches
+  
   branches:
-    develop:
-      - step: *develop-build
     master:
       - step: *build
+  
+  pull-requests:
+    '**': #this runs as default for any branch not elsewhere defined, but only when pull-request is created
+      - parallel: 
+        - step: *container-build-only
