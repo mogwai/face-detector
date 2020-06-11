@@ -8,11 +8,26 @@ from PIL import Image, ImageDraw, ImageFont
 from pydantic import BaseModel
 
 from .faces import detect_faces
+from .settings import ServiceSettings
+
+settings = ServiceSettings()
 
 with open(".version") as f:
     VERSION = f.read()
 
-app = FastAPI(version=VERSION, title="Face Detection", docs_url="/", redoc_url=None)
+DESCRIPTION = """
+A service to deal with human faces. Finds bounding boxes
+for faces in a given image.
+"""
+
+app = FastAPI(
+    version=VERSION,
+    title="Face Detection",
+    docs_url="/",
+    redoc_url=None,
+    description=DESCRIPTION,
+    openapi_prefix=settings.url_prefix,
+)
 
 # Set up CORS
 app.add_middleware(
@@ -23,15 +38,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load font to use to show percentages
-with open("./font.ttf", "rb") as f:
-    FONT = ImageFont.truetype(BytesIO(f.read()), 15)
-
 
 @app.get("/version")
 def version(res: Response):
     """A route for health checking"""
     return {"version": VERSION}
+
+
+# Load font to use to show percentages
+with open("./font.ttf", "rb") as f:
+    FONT = ImageFont.truetype(BytesIO(f.read()), 15)
 
 
 class BBoxResponse(BaseModel):
